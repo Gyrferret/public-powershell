@@ -5,9 +5,6 @@ foreach($events in $event)
      ($events.message |Select-String -Pattern $regexp).Matches.Value >> C:\IPs.txt 
      }
 
-Get-NetFirewallRule -Enabled False
-
-Set-NetFirewallSecurityFilter 
 
 New-NetFirewallRule -DisplayName RDP-TCP-Block -Action Block -Direction Inbound -Enabled True -Profile Any -Protocol TCP -RemotePort 3389
 New-NetFirewallRule -DisplayName RDP-UPD-Block -Action Block -Direction Inbound -Enabled True -Profile Any -Protocol UDP -RemotePort 3389
