@@ -1,18 +1,19 @@
-﻿$IPAddre = Read-Host Enter a number #Prompts to enter the IP Address
+﻿$IPAddr = Read-Host Enter a number #Prompts to enter the IP Address
 [int]$mask = Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
 [int]$sub = 8 #Sets one of our constant variables
 $remainder = $null #establishes a variable and sets its value to $null for now
 $SimOctets = [math]::DivRem($mask,$sub,[ref]$remainder) #Determines the amount similar octets the IP address has
-$subnet = [math]::Pow(2,($remainder)) #Determines the subnet mask
+#$subnet = [math]::Pow(2,($remainder)) #Determines the subnet mask
 $InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask 
-$GateIP = ([math]::floor(($number / $function))) * $function + 1 #determines the subnet mask
+$GateIP = ([math]::floor(($IPAddr / $InvSub))) * $InvSub + 1 #determines the subnet mask
+$GateIP,$InvSub
 ######################################
 ##Logic for Determining Subnet Masks##
 ######################################
-
-
-
-
+for($i = (-($remainder - 8)); $i -lt 8; $i ++) # Logic that determines how many times to iterate function
+    {$subnet += ([math]::Pow(2,$a))} #Determines that correct subnet mask ending
+$subnet
+Clear-Variable d
 
 
 
@@ -31,3 +32,4 @@ Write-Output "$final, Final octet of the Ip is $GatewayIP"
 
 
 $subnet1 = [math]::Pow(2,($a)) + [math]::Pow(2,($a))
+
