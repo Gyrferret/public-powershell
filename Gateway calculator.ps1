@@ -3,10 +3,16 @@
 [int]$sub = 8 #Sets one of our constant variables
 $remainder = $null #establishes a variable and sets its value to $null for now
 $SimOctets = [math]::DivRem($mask,$sub,[ref]$remainder) #Determines the amount similar octets the IP address has
-#$subnet = [math]::Pow(2,($remainder)) #Determines the subnet mask
-$InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask 
-$GateIP = ([math]::floor(($IPAddr / $InvSub))) * $InvSub + 1 #determines the subnet mask
-#$GateIP,$InvSub #Used as a checkpoint to view variable; comment out otherwise
+$subnet = [math]::Pow(2,($remainder)) #Determines the subnet mask
+#$InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask (Old Method)
+$GateIP = (255 - [math]::Pow(2,(8 - $remainder)) + 1) # Determines subnet mask (New Method)
+#$GateIP = ([math]::floor(($IPAddr / $InvSub))) * $InvSub + 1 #determines the subnet mask (Old Method)
+$GateIP,$InvSub #Used as a checkpoint to view variable; comment out otherwise
+
+
+
+
+
 ######################################
 ##Logic for Determining Subnet Masks##
 ######################################
@@ -21,11 +27,13 @@ if ($SimOctets -lt 3) #if condition to set the final octet as .1 if netmask less
     } else { 
         $Gateway = (([string]"255.") * $SimOctets)+ $subnet #creates the gateway of any subnets greater= than or equal to a /24
         }
-#$Gateway #Used as a checkpoint to view variable; comment out otherwise
+$Gateway #Used as a checkpoint to view variable; comment out otherwise
 #Clear-Variable subnet #clears the subnet variable, or else it will be inaccurate on subsequent runs of this script within the same session. Comment-out otherwise.
 ##################################
 ##Logic for Determining Gateways##
 ##################################
+
+
 if ($final -lt 3) #if condition to set the final octet as .1 if netmask less than a /24
      {
         $Gateway = (([string]"255.") * $final)+ $GateIP + (([String]".0")*(2 - $final)) + [String]".1" #creates the gateway of any subnets less than a /24
