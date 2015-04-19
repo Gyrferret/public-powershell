@@ -1,25 +1,15 @@
 ﻿$IPAddr = Read-Host Enter a number #Prompts to enter the IP Address
 [int]$mask = Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
-[int]$sub = 8 #Sets one of our constant variables
+$IPSplit = $IPAddr.Split(".")
 $remainder = $null #establishes a variable and sets its value to $null for now
-$SimOctets = [math]::DivRem($mask,$sub,[ref]$remainder) #Determines the amount similar octets the IP address has
-$subnet = [math]::Pow(2,($remainder)) #Determines the subnet mask
-#$InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask (Old Method)
-$GateIP = (255 - [math]::Pow(2,(8 - $remainder)) + 1) # Determines subnet mask (New Method)
-#$GateIP = ([math]::floor(($IPAddr / $InvSub))) * $InvSub + 1 #determines the subnet mask (Old Method)
-$GateIP,$InvSub #Used as a checkpoint to view variable; comment out otherwise
-
-
-
-
-
+$SimOctets = [math]::DivRem($mask,8,[ref]$remainder) #Determines the amount similar octets the IP address has
+$InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask (Old Method)
+$Subnet = (256 - [math]::Pow(2,(8 - $remainder))) # Determines subnet mask (New Method)
+$GateIP = ([math]::floor(($IPSplit[$SimOctets] / $InvSub))) * $InvSub + 1 #determines the subnet mask (Old Method)
+#$SimOctets,$IPAddr[$SimOctets],$InvSub,$GateIP,$InvSub #Used as a checkpoint to view variable; comment out otherwise
 ######################################
 ##Logic for Determining Subnet Masks##
 ######################################
-$subnet = 0 #sets a default for the variable.
-for($i = (-($remainder - 8)); $i -lt 8; $i ++) # Logic that determines how many times to iterate function
-    {$subnet += ([math]::Pow(2,$i))}        
-
 #Clear-Variable subnet #clears the subnet variable, or else it will be inaccurate on subsequent runs of this script within the same session. Comment-out otherwise.
 if ($SimOctets -lt 3) #if condition to set the final octet as .1 if netmask less than a /24
      {
@@ -32,17 +22,16 @@ $Gateway #Used as a checkpoint to view variable; comment out otherwise
 ##################################
 ##Logic for Determining Gateways##
 ##################################
-
-
-if ($final -lt 3) #if condition to set the final octet as .1 if netmask less than a /24
-     {
-        $Gateway = (([string]"255.") * $final)+ $GateIP + (([String]".0")*(2 - $final)) + [String]".1" #creates the gateway of any subnets less than a /24
-    } else { 
-        $Gateway = (([string]"255.") * $final)+ $GateIP + (([String]".0")*(3 - $final)) #creates the gateway of any subnets greater= than or eaqual to a /24
-        }
-$Gateway
-Write-Output "$final, Final octet of the Ip is $GatewayIP" 
-
-
-$subnet1 = [math]::Pow(2,($a)) + [math]::Pow(2,($a))
-
+$SimIP = $null
+For ( $b = ($SimOctets - $SimOctets); $b -lt $SimOctets; $b++)
+    { 
+        $SimIP += $IPSplit[$b] + "." 
+    }
+if ($SimOctets -lt 3)
+    {
+    $SimIP + [String]$GateIP + (([String]".0")*(2 - $SimOctets)) + ([String]".1")
+        } else
+    {
+    $SimIP + $GateIP
+    }
+      Clear-Variable c #,d,IPSplit
