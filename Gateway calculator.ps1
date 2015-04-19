@@ -1,5 +1,7 @@
 ﻿$IPAddr = Read-Host Enter a number #Prompts to enter the IP Address
 [int]$mask = Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
+#$IPTest + "8.8.8.8" //To be used later for validation
+#if ([IPAddress]::TryParse($Ipaddr,[ref]$IPtest)) //To be used later for validation
 $IPSplit = $IPAddr.Split(".")
 $remainder = $null #establishes a variable and sets its value to $null for now
 $SimOctets = [math]::DivRem($mask,8,[ref]$remainder) #Determines the amount similar octets the IP address has
@@ -44,3 +46,4 @@ if ($SimOctets -lt 3)
 Write-Output "IP Address: $IPAddr /$mask"
 Write-Output "Netmask: $SubnetMask"
 Write-Output "Gateway IP: $Gateway"
+
