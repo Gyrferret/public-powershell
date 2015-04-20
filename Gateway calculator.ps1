@@ -1,4 +1,4 @@
-﻿$IPAddr = Read-Host Enter a number #Prompts to enter the IP Address
+﻿$IPAddr = "71.6.167.73"#Read-Host Enter a number #Prompts to enter the IP Address
 [int]$mask = Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
 #$IPTest + "8.8.8.8" //To be used later for validation
 #if ([IPAddress]::TryParse($Ipaddr,[ref]$IPtest)) //To be used later for validation
@@ -7,6 +7,7 @@ $remainder = $null #establishes a variable and sets its value to $null for now
 $SimOctets = [math]::DivRem($mask,8,[ref]$remainder) #Determines the amount similar octets the IP address has
 $InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask (Old Method)
 $Subnet = (256 - [math]::Pow(2,(8 - $remainder))) # Determines subnet mask (New Method)
+$UsableIP = [Math]::pow(2,(((3-$simOctets)*8) + (8 - $remainder))) - 2 #Calculates the number of usable IPs in the subnet
 #$TestIP = (([math]::floor(($IPSplit[$SimOctets] / $InvSub))) * $InvSub) #determines the subnet mask (Old Method)
 If ((([math]::floor(($IPSplit[$SimOctets] / $InvSub))) * $InvSub) -eq $IPSplit[$SimOctets]) #Tests to see if the subnet starts on the current IP.
     {$GateIP = ([math]::floor(($IPSplit[$SimOctets] / $InvSub))) * $InvSub
@@ -25,9 +26,9 @@ if ($SimOctets -lt 3) #if condition to set the final octet as .1 if netmask less
         }
 #$SubnetMask #Used as a checkpoint to view variable; comment out otherwise
 #Clear-Variable subnet #clears the subnet variable, or else it will be inaccurate on subsequent runs of this script within the same session. Comment-out otherwise.
-##################################
-##Logic for Determining Gateways##
-##################################
+################################
+##Logic for Determining Ranges##
+################################
 $SimIP = $null
 For ( $b = ($SimOctets - $SimOctets); $b -lt $SimOctets; $b++)
     { 
@@ -35,15 +36,21 @@ For ( $b = ($SimOctets - $SimOctets); $b -lt $SimOctets; $b++)
     }
 if ($SimOctets -lt 3)
     {
+    $FinalIP = $SimIP + [String]($GateIP + $InvSub - 1) + (([String]".0")*(2 - $SimOctets)) + ([String]".254")
     $Gateway = $SimIP + [String]$GateIP + (([String]".0")*(2 - $SimOctets)) + ([String]".1")
+    $BroadIP = $SimIP + [String]($GateIP + $InvSub - 1) + (([String]".0")*(2 - $SimOctets)) + ([String]".255")
         } else
     {
     $Gateway = $SimIP + $GateIP
+    $FinalIP = $SimIP + ($GateIP + $InvSub - 3)
+    $BroadIP = $SimIP + ($GateIP + $InvSub - 2)
     }
-      Clear-Variable c #,d,IPSplit
-#Clear-Host
-
+      #Clear-Variable c #,d,IPSplit
+Clear-Host
 Write-Output "IP Address: $IPAddr /$mask"
 Write-Output "Netmask: $SubnetMask"
-Write-Output "Gateway IP: $Gateway"
-
+Write-Output "First Usable IP: $Gateway"
+Write-Output "Last Usable IP: $FinalIP"
+Write-Output "IP Range: $Gateway - $FinalIP"
+Write-Output "Broadcast IP: $BroadIP" 
+Write-Output "Usable IPs: $UsableIP"
