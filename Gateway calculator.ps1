@@ -28,6 +28,11 @@ BEGIN{
         } #end of if statement
     } #end of BEGIN
 PROCESS{
+    Foreach ($IPAddress in $IPAddress)
+        GetIPInfo -IPAddr $IPAddress -Mask $NetMask
+    } #End of PROCESS
+function GetIPInfo {
+param($IPAddr = 127.0.0.1, $mask = 255.255.255.0 )
 $IPAddr = "71.6.167.73"#Read-Host Enter a number #Prompts to enter the IP Address
 [int]$mask = Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
 #$IPTest + "8.8.8.8" //To be used later for validation
@@ -87,6 +92,10 @@ $PC | Add-Member -MemberType NoteProperty -name "Last Usable IP" $FinalIP
 $PC | Add-Member -MemberType NoteProperty -name "IP Range" -value $FinalIP
 $PC | Add-Member -MemberType NoteProperty -name "Broadcast IP"  -value $BroadIP
 $PC | Add-Member -MemberType NoteProperty -name "Usable IPs" -value $UsableIP
-$PC | select *
 
-} #End of PROCESS
+} #End of Function
+
+New-Alias GIP Get-IPInfo
+
+Export-ModuleMember -Function Get-IPInfo
+Export-ModuleMember -alias GIP
