@@ -1,4 +1,34 @@
-﻿$IPAddr = "71.6.167.73"#Read-Host Enter a number #Prompts to enter the IP Address
+﻿function Get-IPInfo {
+param (
+    [Parameter(ValueFromPipeline=$True,
+               ValueFromPipelineByPropertyName=$True)]
+            [Alias('IP')]
+            [STRING[]]$IPAddress,
+    [Parameter(ValueFromPipeline=$True,
+               ValueFromPipelineByPropertyName=$True)]
+            [Alias('Mask')]
+            [int[]]$Netmask,
+            [String]$logfile = 'C:\Windows\Logs\Scripts\Get-IPInfoErrors.txt'#Specifies the default locaiton of the error file
+        )
+BEGIN{
+    if (!(test-path $logfile)) #tests path of log file
+       { 
+        try { 
+            New-Item $logfile -ea SilentlyContinue #attempts to make one if one isn't present
+            } catch {
+            Write-Output "Unable to create Log File" #message if unable to make one
+            }
+        } else {
+        try {
+            Remove-Item $logfile -ea SilentlyContinue #attempts to remove one if present
+            New-Item $logfile -ea SilentlyContinue #attempts to make one after removal
+            } catch {
+            Write-Output "Unable to remove old log file, or create new one" #message if unable to do either
+            }
+        } #end of if statement
+    } #end of BEGIN
+PROCESS{
+$IPAddr = "71.6.167.73"#Read-Host Enter a number #Prompts to enter the IP Address
 [int]$mask = Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
 #$IPTest + "8.8.8.8" //To be used later for validation
 #if ([IPAddress]::TryParse($Ipaddr,[ref]$IPtest)) //To be used later for validation
@@ -46,11 +76,17 @@ if ($SimOctets -lt 3)
     $BroadIP = $SimIP + ($GateIP + $InvSub - 2)
     }
       #Clear-Variable c #,d,IPSplit
-Clear-Host
-Write-Output "IP Address: $IPAddr /$mask"
-Write-Output "Netmask: $SubnetMask"
-Write-Output "First Usable IP: $Gateway"
-Write-Output "Last Usable IP: $FinalIP"
-Write-Output "IP Range: $Gateway - $FinalIP"
-Write-Output "Broadcast IP: $BroadIP" 
-Write-Output "Usable IPs: $UsableIP"
+
+
+$PC = New-Object -TypeName PSObject
+$PC | Add-Member -MemberType NoteProperty -name "IP Address" -value $IPAddr 
+$PC | Add-Member -MemberType NoteProperty -name "Subnet Mask" -value $mask
+$PC | Add-Member -MemberType NoteProperty -name "Netmask" -value $SubnetMask
+$PC | Add-Member -MemberType NoteProperty -name  "First Usable IP" -value $Gateway
+$PC | Add-Member -MemberType NoteProperty -name "Last Usable IP" $FinalIP
+$PC | Add-Member -MemberType NoteProperty -name "IP Range" -value $FinalIP
+$PC | Add-Member -MemberType NoteProperty -name "Broadcast IP"  -value $BroadIP
+$PC | Add-Member -MemberType NoteProperty -name "Usable IPs" -value $UsableIP
+$PC | select *
+
+} #End of PROCESS
