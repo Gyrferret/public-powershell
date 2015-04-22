@@ -1,13 +1,15 @@
 ﻿function Get-IPInfo {
 param (
     [Parameter(ValueFromPipeline=$True,
-               ValueFromPipelineByPropertyName=$True)]
+               ValueFromPipelineByPropertyName=$True,
+               Mandatory=$True)]
             [Alias('IP')]
             [STRING[]]$IPAddress,
     [Parameter(ValueFromPipeline=$True,
-               ValueFromPipelineByPropertyName=$True)]
+               ValueFromPipelineByPropertyName=$True,
+               Mandatory=$True)]
             [Alias('Mask')]
-            [int[]]$Netmask,
+            [int[]]$SubnetMask,
             [String]$logfile = 'C:\Windows\Logs\Scripts\Get-IPInfoErrors.txt'#Specifies the default locaiton of the error file
         )
 BEGIN{
@@ -31,6 +33,7 @@ PROCESS{
     Foreach ($IPAddress in $IPAddress)
         GetIPInfo -IPAddr $IPAddress -Mask $NetMask
     } #End of PROCESS
+}
 function GetIPInfo {
 param($IPAddr = 127.0.0.1, $mask = 255.255.255.0 )
 $IPAddr = "71.6.167.73"#Read-Host Enter a number #Prompts to enter the IP Address
@@ -94,6 +97,7 @@ $PC | Add-Member -MemberType NoteProperty -name "Broadcast IP"  -value $BroadIP
 $PC | Add-Member -MemberType NoteProperty -name "Usable IPs" -value $UsableIP
 
 } #End of Function
+
 
 New-Alias GIP Get-IPInfo
 
