@@ -74,7 +74,9 @@ if ($SimOctets -lt 3)
     $BroadIP = $SimIP + ($GateIP + $InvSub - 2)
     }
       #Clear-Variable c #,d,IPSplit
-
+##############################
+##Logic for IP Class/Public ##
+##############################
 If ($IPSplit[0] -eq 10) #Determines Class and if IP is Private
     { $IsPrivate = $True
       $Class = "A"
