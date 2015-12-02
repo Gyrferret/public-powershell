@@ -28,27 +28,40 @@ BEGIN{ #sets switch variable for determining which function to utilize
 PROCESS{
     if ($catch)
         { Foreach ($IPAddress in $IPAddress) { #function to run if CIDR notation present
-            GetIPInfo -IPAddr "$IPAddress" -CIDR "$CIDR"
+         $NetMask = GetNetMask -IPAddr $IPAddress.IPAddress -CIDR $CIDR.CIDR
+         $range = GetRange -IPAddr $IPAddress.IPAddress -CIDR $CIDR.CIDR
+         $class = GetIPClass -IPAddr $IPAddress.IPAddress
+    $PC = New-Object -TypeName PSObject
+    $PC | Add-Member -MemberType NoteProperty -name "IPAddress" -value $IPAddress 
+    $PC | Add-Member -MemberType NoteProperty -name "CIDR" -value $CIDR
+    $PC | Add-Member -MemberType NoteProperty -name "Netmask" -value $netmask.netmask
+    $PC | Add-Member -MemberType NoteProperty -name "UsableIPs" -value $range.UsableIPs
+    $PC | Add-Member -MemberType NoteProperty -name "FirstUsableIP" -value $range.FirstUsableIP
+    $PC | Add-Member -MemberType NoteProperty -name "LastUsableIP" $range.LastUsableIP
+    $PC | Add-Member -MemberType NoteProperty -name "BroadcastIP"  -value $range.BroadcastIP
+    $PC | Add-Member -MemberType NoteProperty -name "IPRange" -value ($range.FirstUsableIP - $range.LastUsableIP)
+    $PC | Add-Member -MemberType NoteProperty -name "IsPrivate" -value $class.IsPrivate
+    $PC | Add-Member -MemberType NoteProperty -name "Class" -value $class.Class
+    $PC
             } #end function if CIDR notation present
         } else {
          Foreach ($IPAddress in $IPAddress) { #function to run if netmask present
             $CIDRN = GETCIDR -subnet $NetMask 
             $Ipinfo = GetNetMask -IPAddr $IPAddress -CIDR $CIDRN.CIDR
-            $range = GetRange -subnetmask $IpInfo.netmask -GateIP $IpInfo.GatewayIP -InvSub $IpInfo.InverseSubnet
-            $class = GetIPClass -IPAddr $IPAddress
-$PC = New-Object -TypeName PSObject
-$PC | Add-Member -MemberType NoteProperty -name "GatewayIP" -Value $Ipinfo.GatewayIP
-$PC | Add-Member -MemberType NoteProperty -name "IPAddress" -value $Ipinfo.IPAddress 
-$PC | Add-Member -MemberType NoteProperty -name "CIDR" -value $Ipinfo.CIDR
-$PC | Add-Member -MemberType NoteProperty -name "Netmask" -value $ipinfo.netmask
-$PC | Add-Member -MemberType NoteProperty -name "UsableIPs" -value $range.UsableIP
-$PC | Add-Member -MemberType NoteProperty -name "FirstUsableIP" -value $range.Gateway
-$PC | Add-Member -MemberType NoteProperty -name "LastUsableIP" $range.FinalIP
-$PC | Add-Member -MemberType NoteProperty -name "BroadcastIP"  -value $range.BroadIP
-$PC | Add-Member -MemberType NoteProperty -name "IPRange" -value ($range.Gateway - $range.FinalIP)
-$PC | Add-Member -MemberType NoteProperty -name "IsPrivate" -value $class.IsPrivate
-$PC | Add-Member -MemberType NoteProperty -name "Class" -value $class.Class
-$PC
+            $range = GetRange -IPAddr $IPAddress -CIDR $CIDRN.CIDR
+            $class = GetIPClass -IPAddr $Ipinfo.IPAddress
+    $PC = New-Object -TypeName PSObject
+    $PC | Add-Member -MemberType NoteProperty -name "IPAddress" -value $Ipinfo.IPAddress 
+    $PC | Add-Member -MemberType NoteProperty -name "CIDR" -value $Ipinfo.CIDR
+    $PC | Add-Member -MemberType NoteProperty -name "Netmask" -value $ipinfo.netmask
+    $PC | Add-Member -MemberType NoteProperty -name "UsableIPs" -value $range.UsableIPs
+    $PC | Add-Member -MemberType NoteProperty -name "FirstUsableIP" -value $range.FirstUsableIP
+    $PC | Add-Member -MemberType NoteProperty -name "LastUsableIP" $range.LastUsableIP
+    $PC | Add-Member -MemberType NoteProperty -name "BroadcastIP"  -value $range.BroadcastIP
+    $PC | Add-Member -MemberType NoteProperty -name "IPRange" -value ($range.FirstUsableIP - $range.LastUsableIP)
+    $PC | Add-Member -MemberType NoteProperty -name "IsPrivate" -value $class.IsPrivate
+    $PC | Add-Member -MemberType NoteProperty -name "Class" -value $class.Class
+    $PC
             } #end function if netmask presnt
         } #End Statement
     } #End of PROCESS
@@ -82,13 +95,10 @@ param(
 $Class = $null
 $remainder = $null #establishes a variable and sets its value to $null for now
 $IsPrivate = $False
-#$IPAddr #= "71.6.167.73"#Read-Host Enter a number #Prompts to enter the IP Address
-#$mask #= Read-Host Enter a netmask #Prompts to enter the subnet (e.g. /14, /22)
 $IPSplit = $IPAddr.Split(".")
 $SimOctets = [math]::DivRem($CIDR,8,[ref]$remainder) #Determines the amount similar octets the IP address has
 $InvSub = [math]::Pow(2,(8 - $remainder)) #determines the inverse subnet mask (Old Method)
 $Subnet = (256 - [math]::Pow(2,(8 - $remainder))) # Determines subnet mask (New Method)
-$UsableIP = [Math]::pow(2,(((3-$simOctets)*8) + (8 - $remainder))) - 2 #Calculates the number of usable IPs in the subnet
 If ((([math]::floor(($IPSplit[$SimOctets] / $InvSub))) * $InvSub) -eq $IPSplit[$SimOctets]) #Tests to see if the subnet starts on the current IP.
     {$GateIP = ([math]::floor(($IPSplit[$SimOctets] / $InvSub))) * $InvSub
     } else { 
@@ -106,36 +116,59 @@ $PC | Add-Member -MemberType NoteProperty -Name "InveseSubnet" -Value $InvSub
 $PC | Add-Member -MemberType NoteProperty -name "IPAddress" -value $IPAddr 
 $PC | Add-Member -MemberType NoteProperty -name "CIDR" -value $CIDR
 $PC | Add-Member -MemberType NoteProperty -name "Netmask" -value $SubnetMask
-$PC | Add-Member -MemberType NoteProperty -name "UsableIPs" -value $UsableIP
 $PC
 } #end GetNetMask Function
 
 Function GetRange {
     Param(
-    [string]$SubnetMask,
-    [int]$GateIP,
-    [int]$InvSub)
-    $SimIP = $null
-    $array = $SubnetMask.Split(".") 
-    $SimOctets = ($array | Select-String "255").count
-    For ( $b = ($SimOctets - $SimOctets); $b -lt $SimOctets; $b++)
-        { $SimIP += $array[$b] + "." }
-    if ($SimOctets -lt 3) {
-        $FinalIP = $SimIP + [String]($GateIP + $InvSub - 1) + (([String]".0")*(2 - $SimOctets)) + ([String]".254")
-        $Gateway = $SimIP + [String]$GateIP + (([String]".0")*(2 - $SimOctets)) + ([String]".1")
-        $BroadIP = $SimIP + [String]($GateIP + $InvSub - 1) + (([String]".0")*(2 - $SimOctets)) + ([String]".255")
-    } else {
-        $Gateway = $SimIP + $GateIP
-        $FinalIP = $SimIP + ($GateIP + $InvSub - 3)
-        $BroadIP = $SimIP + ($GateIP + $InvSub - 2)
-    }
-    $PC = New-Object -TypeName PSObject
-    $PC | Add-Member -MemberType NoteProperty -name  "FirstUsableIP" -value $Gateway
-    $PC | Add-Member -MemberType NoteProperty -name "LastUsableIP" $FinalIP
-    $PC | Add-Member -MemberType NoteProperty -name "BroadcastIP"  -value $BroadIP
-    $PC | Add-Member -MemberType NoteProperty -name "IPRange" -value ("$Gateway - $FinalIP")
-$PC
-} #end GetRange Function.
+    [string]$IPAddr,
+    [int]$CIDR)
+    [string]$array = $null
+    $iparray = $IPaddr.Split(".") 
+    $simips = [math]::floor($CIDR/8) #determines how many similar octets
+    $SimOctets = $iparray[$simips] #grabs the first non-similar octet based on above logic
+    $range = [math]::Pow(2,(8-($CIDR % 8))) #determines the size of subnet range
+    for( $i = 1; $a -lt $SimOctets; $i++) #iterates through multiples of the subnet range until it finds the range that the non-similar octect falls in
+        {$a = $range * $i 
+        }
+    for($c = 0; $c -lt $simips; $c++) 
+        {$array += ($iparray[$c] + ".") #re-assembles the IP based upon the amount of similar octects
+        }
+    $usable = [math]::Pow(2,(32-$cidr)) - 2 #determines the amount of usable IPs in the subnet
+    if ($CIDR -lt 24 -and $CIDR -gt 8) { #logic for /8 through /24  networks
+        $min = ($array + ($range * ($i -1)) + (([String]".0")*(2 - $simips)) + ".1")
+        $max = ($array + (($range * ($i))-1) + (([String]".0")*(2 - $simips))+ ".254")
+        $broad = ($array + (($range * ($i))-1) + (([String]".0")*(2 - $simips))+ ".255")
+        $properties = @{
+            FirstUsableIP=$min
+            LastUsableIP=$max
+            BroadcastIP=$broad
+            UsableIPs=$usable
+            }
+   } elseif ($CIDR -gt 24) { #logic for /24 and above networks
+        $min = ($array + (($range * ($i -1))+1))
+        $max = ($array + ((($range * $i))-2))
+        $broad = ($array + (($range * ($i))-1))
+        $properties = @{
+            FirstUsableIP=$min
+            LastUsableIP=$max
+            BroadcastIP=$broad
+            UsableIPs=$usable
+            }
+   } else { #logic for /8 and below networks
+        $min = (($range * ($i -1)) + (([String]".254")*(2 - $simips)) + ".1")
+        $max = ((($range * ($i))-1) + (([String]".254")*(2 - $simips))+ ".254")
+        $broad = ((($range * ($i))-1) + (([String]".254")*(2 - $simips))+ ".255")
+        $properties = @{
+            FirstUsableIP=$min
+            LastUsableIP=$max
+            BroadcastIP=$broad
+            UsableIPs=$usable
+            }
+        }
+   New-Object  -TypeName PSObject -Property $properties
+            
+   } #end GetRange Function.
 
 Function GetIPClass {
     param([Parameter(ValueFromPipeline=$True,
@@ -160,12 +193,8 @@ If ($IPSplit[0] -eq 10) #Determines Class and if IP is Private
 $PC
 } #end GetIPClass functon
 
-$PC 
- #End of Function
-Get-IPInfo -IPAddress 192.168.2.5 -NetMask 255.255.255.128
-
 
 #New-Alias GIP Get-IPInfo
 
-#Export-ModuleMember -Function Get-IPInfo
+Export-ModuleMember -Function Get-IPInfo
 #Export-ModuleMember -alias GIP
