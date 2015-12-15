@@ -6,7 +6,7 @@
         HelpMessage="Enter the destination path for split files"
         )]
         [string]$path,
-        $quantity = 3MB) # End Param
+        $quantity = 5) # End Param
 
 BEGIN{ #Begin BEGIN
     if(!(Test-Path $file)) {
@@ -25,7 +25,6 @@ PROCESS{ # Begin PROCESS
         {$lines++
             }
     $ReadLines =[math]::Floor($lines/$quantity)
-    $ReadLines
     $count.Close()
     $FinalPaths = @()
     for($i = 1; $i -le $quantity; $i++) {
@@ -44,8 +43,14 @@ Function MakeNewFile{
         [int]$counter)
     $name = (Get-ChildItem $File).BaseName
     $FinalPath = Join-path -path $path -childpath ($name + "_$counter" + ".txt")
-    New-Item -Path $FinalPath -ItemType File
-    $counter ++
+    if(Test-Path $FinalPath) {
+        Write-Warning "Destination File Already Exists! Creating new File"
+        $random = Get-Random
+        $finalpath = Join-path -path $path -childpath ($name + "_$counter" +"_$random"+ ".txt")
+        New-Item -Path $FinalPath -ItemType File
+        } else {
+        New-Item -Path $FinalPath -ItemType File
+        }
     New-Object -TypeName PSObject -ArgumentList @{"DestinationFile"=$FinalPath}
     }
 Function SplitFile {
@@ -68,5 +73,4 @@ Function SplitFile {
         }
     $stream.close()
     } # End SplitFile Function
-
 Export-ModuleMember Split-File
