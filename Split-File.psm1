@@ -9,14 +9,17 @@
         $quantity = 5) # End Param
 
 BEGIN{ #Begin BEGIN
-    if(!(Test-Path $file)) {
-        Write-Error -Message "Specified File does not Exist!"
-        Exit
-    if(!(Test-Path $path)) {
-        Write-Warning -Message "Specified destination path does not exist. Creating at File location"
-        $path = (Get-ChildItem $file).Directory
-        }
-    }
+    while(!(Test-Path $file -PathType Leaf)) {
+        Write-Warning -Message "Specified File does not Exist or is a Directory!"
+        $file = Read-Host "Please Enter a Valid File" }               
+    if(!($path)) { #tests to see if path was specified at all
+        Write-Warning -Message "Destination Path does not exist. Creating at File location"
+        $path = (Join-Path -Path ((Get-ChildItem $file).Directory) -ChildPath ((Get-ChildItem $file).basename))
+       $path = (GenerateDirectory -path $path -file $file) 
+    } else { 
+        $path = (GenerateDirectory -path $path -file $file)
+     } #end else statement 
+    
 } #End BEGIN        
 PROCESS{ # Begin PROCESS
     $lines = 0
@@ -73,4 +76,38 @@ Function SplitFile {
         }
     $stream.close()
     } # End SplitFile Function
+function GenerateDirectory {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$path,
+        [Parameter(Mandatory=$true)]
+        [string]$file
+        )
+    if (!(Test-Path $path -PathType Container)) { #tests to see if specified path is a valid path (not file).
+        Write-Warning -Message "Specified destination path does not exist. Creating at File location" #Warns user of what will happen
+        $path = (Join-Path -Path ((Get-ChildItem $file).Directory) -ChildPath ((Get-ChildItem $file).basename)) #creates new path based on 
+        if (Test-Path $path) { #logic for creating a new path if path already exists
+                Write-Warning "Directory already Exists; Creating new Directory"
+                $newpath = GenerateNewDirectory -path $path
+                New-Item -path $newpath.path -ItemType Directory
+                New-Object  -TypeName PSObject -ArgumentList @{"path"=$path}
+        } else {
+            New-Item $path -ItemType Directory
+            New-Object  -TypeName PSObject -ArgumentList @{"path"=$path}
+            } # end if statement
+    } else {
+    New-Object  -TypeName PSObject -ArgumentList @{"path"=$path}
+    }
+} #end GenerateDirectory Function
+function GenerateNewDirectory { # creates the directory based on the first available free directory from the while loop 
+    param([string]$path)
+    $i = 1 # sets $i variable which will be used later to create new directory paths
+    $newpath = $path #creates a new variable to test if it exists
+    While (Test-Path $newpath) { #While loop will test new versions of the path until it finds one that doesn't exist 
+        $newpath = "$path" + "_$i" #assembles the new path using the name of the file and the existing directory, plus an incremented number
+            If (Test-Path $newpath) { #Begin if statement for testing new path
+                $i++} 
+        } # end while loop
+    New-Object -TypeName PSObject -ArgumentList @{"path"=$newpath}
+} #end GenerateNewDirectory function
 Export-ModuleMember Split-File
