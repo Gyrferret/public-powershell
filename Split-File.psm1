@@ -34,7 +34,7 @@ PROCESS{ # Begin PROCESS
         $NewFile = MakeNewFile -File $File -path $path -counter $i
         $FinalPaths += $NewFile.Destinationfile
         }
-    SplitFile -file $file -path $FinalPaths -lines $ReadLines
+    SplitFile -file $file -path $FinalPaths -lines $ReadLines -quantity $quantity
     } # End PROCESS
 END{ #Begin END
     } #End END
@@ -60,20 +60,26 @@ Function SplitFile {
     param(
         $file,
         $path,
-        $lines)
+        $lines,
+        $quantity)
+    $a = 1
     $stream = New-Object "System.IO.StreamReader" -ArgumentList $File
-    Foreach( $DestinationFile in $path) {       
+    Foreach( $DestinationFile in $path) {   
         $i = 0
-        $streaminput = if(!($DestinationFile -eq $path[-1])) {    
+        if(!($DestinationFile -eq $path[-1])) {
+        $writer = new-object system.IO.StreamWriter($DestinationFile)    
             while($i -lt $lines) {    
-                $stream.ReadLine()
+                $writer.WriteLine($stream.ReadLine())
                 $i++
                 }
-            } else {
-            $stream.Readtoend()
+            }  else {
+            $writer = new-object system.IO.StreamWriter($DestinationFile)
+            $writer.write($stream.Readtoend())
             }
-    $streaminput > $DestinationFile
-        }
+        Write-Progress -Activity "Writing File $a of $quantity"
+        $writer.close()
+        $a++
+        }  
     $stream.close()
     } # End SplitFile Function
 function GenerateDirectory {
@@ -110,4 +116,10 @@ function GenerateNewDirectory { # creates the directory based on the first avail
         } # end while loop
     New-Object -TypeName PSObject -ArgumentList @{"path"=$newpath}
 } #end GenerateNewDirectory function
+function WriteFile {
+    param($stream,
+          $destination
+    )
+    $stream > $Destination
+    }
 Export-ModuleMember Split-File
