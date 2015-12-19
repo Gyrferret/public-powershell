@@ -15,9 +15,9 @@ BEGIN{ #Begin BEGIN
     if(!($path)) { #tests to see if path was specified at all
         Write-Warning -Message "Destination Path does not exist. Creating at File location"
         $path = (Join-Path -Path ((Get-ChildItem $file).Directory) -ChildPath ((Get-ChildItem $file).basename))
-       $path = (GenerateDirectory -path $path -file $file) 
+       $path = (GenerateDirectory -path $path -file $file).path 
     } else { 
-        $path = (GenerateDirectory -path $path -file $file)
+        $path = (GenerateDirectory -path $path -file $file).path
      } #end else statement 
     
 } #End BEGIN        
@@ -63,16 +63,16 @@ Function SplitFile {
         $lines)
     $stream = New-Object "System.IO.StreamReader" -ArgumentList $File
     Foreach( $DestinationFile in $path) {       
-            $i = 0
-        $test=    if (!($DestinationFile -eq $path[-1])) {    
-            while($i -lt $lines) {
-            $stream.ReadLine()
-            $i++
-            }
+        $i = 0
+        $streaminput = if(!($DestinationFile -eq $path[-1])) {    
+            while($i -lt $lines) {    
+                $stream.ReadLine()
+                $i++
+                }
             } else {
             $stream.Readtoend()
-            } 
-        $test > $DestinationFile
+            }
+    $streaminput > $DestinationFile
         }
     $stream.close()
     } # End SplitFile Function
@@ -110,4 +110,5 @@ function GenerateNewDirectory { # creates the directory based on the first avail
         } # end while loop
     New-Object -TypeName PSObject -ArgumentList @{"path"=$newpath}
 } #end GenerateNewDirectory function
+# $var = (Split-File -file C:\Users\Diego\Desktop\testdocument.txt -path C:\Users\Diego\Desktop)
 Export-ModuleMember Split-File
