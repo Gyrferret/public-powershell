@@ -2,7 +2,7 @@
     Param(
         [Parameter(Mandatory=$true)]
         [string]$file,
-        [Parameter(Mandatory=$true,
+        [Parameter(
         HelpMessage="Enter the destination path for split files"
         )]
         [string]$path,
@@ -110,5 +110,5 @@ function GenerateNewDirectory { # creates the directory based on the first avail
         } # end while loop
     New-Object -TypeName PSObject -ArgumentList @{"path"=$newpath}
 } #end GenerateNewDirectory function
-# $var = (Split-File -file C:\Users\Diego\Desktop\testdocument.txt -path C:\Users\Diego\Desktop)
-Export-ModuleMember Split-File
+Split-File -file C:\Users\Diego\Desktop\testdocument.txt -path C:\Users\Diego\Desktop
+#Export-ModuleMember Split-File
