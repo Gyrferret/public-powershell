@@ -110,5 +110,4 @@ function GenerateNewDirectory { # creates the directory based on the first avail
         } # end while loop
     New-Object -TypeName PSObject -ArgumentList @{"path"=$newpath}
 } #end GenerateNewDirectory function
-Split-File -file C:\Users\Diego\Desktop\testdocument.txt -path C:\Users\Diego\Desktop
-#Export-ModuleMember Split-File
+Export-ModuleMember Split-File
