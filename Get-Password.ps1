@@ -1,7 +1,7 @@
 ﻿function Get-Password {
 param( 
 [int] $length = 12,
-[int] $quantity =1,
+[int] $quantity = 1,
 [switch] $complex,
 [switch] $nonalphanumeric
 )
@@ -45,7 +45,11 @@ Function GeneratePassword{
         #the random number by the total length of the character base string, then adds the selected character
         #to the new password string.
         }                                                
-    $password
+    if(([regex]::Match($Password,"\d")).success -and ([regex]::Match($Password,"\w")).success) {
+        $password
+    } else {
+    GeneratePassword -length $length -cBase $cBase
+    }
 } #End of GeneratePassword Function.
 Export-ModuleMember Get-Password
 New-Alias gpwd
