@@ -21,7 +21,7 @@ function Get-RedditUser {
     [switch]$info
     )
     if (!($token))
-        {Get-Token}
+        {Get-RedditToken}
         $header = @{ 
             authorization = $token.token_type + " " + $token.access_token
          }
